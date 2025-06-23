@@ -1,0 +1,97 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%; /* Dark blue-gray */
+    --foreground: 210 40% 98%; /* Light gray / Almost white */
+
+    --muted: 240 4.8% 15.9%; /* Darker blue-gray */
+    --muted-foreground: 215 20.2% 65.1%; /* Lighter gray */
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --card: 240 4.8% 10%; /* Slightly lighter dark blue-gray for cards */
+    --card-foreground: 210 40% 98%;
+
+    --border: 240 3.7% 15.9%; /* Border for cards, inputs */
+    --input: 240 3.7% 15.9%; /* Input background */
+
+    --primary: 262.1 83.3% 57.8%; /* Vibrant Purple */
+    --primary-foreground: 210 40% 98%; /* Text on primary */
+
+    --secondary: 222.2 47.4% 11.2%; /* Darker blue for secondary elements */
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 262.1 83.3% 57.8%; /* Purple for accents */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 72.2% 50.6%; /* Red for destructive actions */
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 262.1 83.3% 57.8%; /* Ring color (focus) */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 210 40% 98%;
+    --muted: 240 4.8% 15.9%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 210 40% 98%;
+    --card: 240 4.8% 10%;
+    --card-foreground: 210 40% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 262.1 83.3% 57.8%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 262.1 83.3% 57.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif; /* Using Inter as a modern sans-serif font */
+  }
+  /* Custom scrollbar for a more modern look */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.5);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.6);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.8);
+  }
+}
+
+@layer components {
+  .glassmorphism-card {
+    @apply bg-card/60 backdrop-blur-lg border border-border/50 shadow-2xl;
+  }
+  .text-gradient-purple {
+    @apply bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text;
+  }
+}
+
+/* Add Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');

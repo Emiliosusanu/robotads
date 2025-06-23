@@ -1,0 +1,1 @@
+export const AMAZON_CLIENT_ID_FROM_ENV = import.meta.env.VITE_AMAZON_CLIENT_ID || "amzn1.application-oa2-client.91aebdc2c3b14a8587e67dbd77e81966";
