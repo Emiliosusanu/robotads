@@ -1,1 +1,7 @@
 node_modules/*
+token.json
+dist-electron/*
+dist-react/*
+.DS_Store
+.env
+.env.local

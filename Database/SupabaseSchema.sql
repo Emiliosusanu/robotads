@@ -1,0 +1,140 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.amazon_accounts (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  name text,
+  client_id text NOT NULL,
+  refresh_token text,
+  access_token text,
+  token_expires_at timestamp with time zone,
+  total_spend numeric DEFAULT 0,
+  total_orders integer DEFAULT 0,
+  acos numeric DEFAULT 0,
+  status text DEFAULT 'connected'::text,
+  last_sync timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  amazon_user_id text,
+  scope text,
+  amazon_profile_id text,
+  amazon_region text,
+  CONSTRAINT amazon_accounts_pkey PRIMARY KEY (id),
+  CONSTRAINT amazon_accounts_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.amazon_ad_groups (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  account_id uuid,
+  name text,
+  campaign_id uuid,
+  amazon_profile_id_text text,
+  amazon_region text,
+  CONSTRAINT amazon_ad_groups_pkey PRIMARY KEY (id),
+  CONSTRAINT amazon_ad_groups_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.amazon_accounts(id),
+  CONSTRAINT fk_adgroups_campaign FOREIGN KEY (campaign_id) REFERENCES public.amazon_campaigns(id)
+);
+CREATE TABLE public.amazon_campaigns (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  account_id uuid,
+  campaign_id text NOT NULL,
+  name text NOT NULL,
+  status text NOT NULL,
+  budget numeric NOT NULL,
+  spend numeric DEFAULT 0,
+  impressions integer DEFAULT 0,
+  clicks integer DEFAULT 0,
+  orders integer DEFAULT 0,
+  acos numeric DEFAULT 0,
+  ctr numeric DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  cpc numeric,
+  amazon_campaign_id_text text,
+  amazon_profile_id_text text,
+  raw_data jsonb,
+  CONSTRAINT amazon_campaigns_pkey PRIMARY KEY (id),
+  CONSTRAINT amazon_campaigns_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.amazon_accounts(id)
+);
+CREATE TABLE public.amazon_keywords (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  campaign_id uuid,
+  keyword_id text NOT NULL,
+  text text NOT NULL,
+  match_type text NOT NULL,
+  bid numeric NOT NULL,
+  status text NOT NULL,
+  spend numeric DEFAULT 0,
+  impressions integer DEFAULT 0,
+  clicks integer DEFAULT 0,
+  orders integer DEFAULT 0,
+  acos numeric DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  ad_group_id uuid,
+  amazon_profile_id_text text,
+  amazon_region text,
+  amazon_profile_id text,
+  CONSTRAINT amazon_keywords_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_keywords_adgroup FOREIGN KEY (ad_group_id) REFERENCES public.amazon_ad_groups(id),
+  CONSTRAINT amazon_keywords_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.amazon_campaigns(id)
+);
+CREATE TABLE public.error_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  message text NOT NULL,
+  context jsonb,
+  account_id uuid,
+  function_name text,
+  timestamp timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT error_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT error_logs_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.amazon_accounts(id)
+);
+CREATE TABLE public.optimization_logs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  campaign_id uuid,
+  keyword_id uuid,
+  action text NOT NULL,
+  reason text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  rule_id uuid,
+  amazon_account_id uuid,
+  entity_type text,
+  entity_id text,
+  details jsonb,
+  CONSTRAINT optimization_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT optimization_logs_keyword_id_fkey FOREIGN KEY (keyword_id) REFERENCES public.amazon_keywords(id),
+  CONSTRAINT optimization_logs_amazon_account_id_fkey FOREIGN KEY (amazon_account_id) REFERENCES public.amazon_accounts(id),
+  CONSTRAINT optimization_logs_rule_id_fkey FOREIGN KEY (rule_id) REFERENCES public.optimization_rules(id),
+  CONSTRAINT optimization_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT optimization_logs_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.amazon_campaigns(id)
+);
+CREATE TABLE public.optimization_rules (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  name text NOT NULL,
+  enabled boolean DEFAULT true,
+  priority integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  settings jsonb DEFAULT '{}'::jsonb,
+  last_run timestamp with time zone,
+  match_type text DEFAULT 'ALL'::text,
+  bid_adjustment numeric DEFAULT 0.1,
+  CONSTRAINT optimization_rules_pkey PRIMARY KEY (id),
+  CONSTRAINT optimization_rules_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_stats (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  rules_created integer DEFAULT 0,
+  campaigns_optimized integer DEFAULT 0,
+  target_acos_achieved integer DEFAULT 0,
+  keywords_reviewed integer DEFAULT 0,
+  active_rules integer DEFAULT 0,
+  total_points integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_stats_pkey PRIMARY KEY (id),
+  CONSTRAINT user_stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
