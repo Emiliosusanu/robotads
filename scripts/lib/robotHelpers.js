@@ -29,27 +29,80 @@ export async function refreshAmazonToken(refresh_token) {
   return data.access_token;
 }
 
-export async function fetchKeywordStats(account, accessToken) {
+
+export async function getKeywordPerformanceReport(account, accessToken) {
   const { amazon_profile_id, amazon_region } = account;
 
-  const endpoint = `https://advertising-api.${amazon_region}.amazon.com/v2/sp/keywords`;
-
-  const res = await fetch(endpoint, {
-    method: 'GET',
+  // 1. Rapor talebi gönder
+  const createRes = await fetch(`https://advertising-api.${amazon_region}.amazon.com/v2/sp/keywords/report`, {
+    method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Amazon-Advertising-API-ClientId': AMAZON_CLIENT_ID,
       'Amazon-Advertising-API-Scope': amazon_profile_id,
+      'Content-Type': 'application/json'
     },
+    body: JSON.stringify({
+      startDate: getDateNDaysAgo(7), // son 7 gün
+      endDate: getDateNDaysAgo(1),
+      metrics: "keywordText,matchType,bid,impressions,clicks,ctr,averageCpc,acos,attributedOrders14d,attributedSales14d"
+    })
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch keywords: ${res.status}`);
+  const reportMeta = await createRes.json();
+
+  if (!reportMeta.reportId) {
+    throw new Error(`❌ Report creation failed: ${JSON.stringify(reportMeta)}`);
   }
 
-  const data = await res.json();
+  // 2. Rapor hazır olana kadar bekle (poll)
+  let downloadUrl = null;
+  for (let i = 0; i < 10; i++) {
+    const pollRes = await fetch(`https://advertising-api.${amazon_region}.amazon.com/v2/reports/${reportMeta.reportId}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Amazon-Advertising-API-ClientId': AMAZON_CLIENT_ID,
+        'Amazon-Advertising-API-Scope': amazon_profile_id,
+      },
+    });
+
+    const pollData = await pollRes.json();
+
+    if (pollData.status === 'SUCCESS') {
+      downloadUrl = pollData.location;
+      break;
+    }
+
+    await new Promise(r => setTimeout(r, 2000)); // 2s bekle
+  }
+
+  if (!downloadUrl) {
+    throw new Error(`❌ Report polling timed out`);
+  }
+
+  // 3. Raporu indir
+  const reportRes = await fetch(downloadUrl);
+  const reportText = await reportRes.text();
+
+  // 4. CSV'yi parse et (Amazon CSV döner)
+  const lines = reportText.trim().split('\n');
+  const [headers, ...rows] = lines;
+  const fields = headers.split(',');
+
+  const data = rows.map(row => {
+    const values = row.split(',');
+    return Object.fromEntries(fields.map((key, i) => [key.trim(), parseFloat(values[i]) || values[i]]));
+  });
+
   return data;
 }
+
+// Yardımcı tarih fonksiyonu
+function getDateNDaysAgo(n) {
+  const date = new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+  return date.toISOString().split('T')[0].replace(/-/g, '');
+}
+
 
 // Örnek rule yapısı:
 // { metric: 'acos', comparison: '>', value: 0.3, action: {type: 'pause'} }
@@ -59,14 +112,16 @@ export function applyRulesToKeywords(keywords, rules) {
 
   for (const keyword of keywords) {
     for (const rule of rules) {
-      const metricValue = keyword[rule.metric];
+      const metricValue = parseFloat(keyword[rule.metric]);
+
+      if (isNaN(metricValue)) continue; // metrik yoksa atla
 
       if (compare(metricValue, rule.comparison, rule.value)) {
         actions.push({
-          keywordId: keyword.keywordId,
+          keywordId: keyword.keywordId || keyword.keywordId || keyword.keywordText, // fallback
           action: rule.action,
-          currentBid: keyword.bid,
-          calculatedAcos: keyword.acos,
+          currentBid: parseFloat(keyword.bid),
+          calculatedAcos: parseFloat(keyword.acos),
         });
       }
     }
@@ -74,6 +129,7 @@ export function applyRulesToKeywords(keywords, rules) {
 
   return actions;
 }
+
 
 function compare(metric, operator, value) {
   switch (operator) {

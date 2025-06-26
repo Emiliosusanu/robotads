@@ -1,7 +1,7 @@
 // optimize.js
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
-import { refreshAmazonToken, fetchKeywordStats, applyRulesToKeywords, sendBidAdjustments, logOptimization } from '../lib/robotHelpers.js';
+import { refreshAmazonToken, fetchKeywordStats, applyRulesToKeywords, sendBidAdjustments, logOptimization } from './lib/robotHelpers.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
