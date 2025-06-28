@@ -115,7 +115,6 @@ const SettingsPage = () => {
       setCurrentRule(JSON.parse(JSON.stringify(initialRuleState)));
       fetchRules();
 
-      
       const { data: accounts, error: accError } = await supabase
         .from("amazon_accounts")
         .select("id")
@@ -127,7 +126,6 @@ const SettingsPage = () => {
         return;
       }
 
-      
       await fetch("/api/optimizeNow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

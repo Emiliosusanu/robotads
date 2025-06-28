@@ -127,46 +127,53 @@ const KeywordsPage = () => {
   }, []);
 
   useEffect(() => {
-  const syncNow = async () => {
-    const user = await supabase.auth.getUser();
-    const { data: accounts } = await supabase
-      .from('amazon_accounts')
-      .select('id')
-      .eq('user_id', user.data.user.id)
-      .limit(1);
+    const syncNow = async () => {
+      const user = await supabase.auth.getUser();
+      const { data: accounts } = await supabase
+        .from("amazon_accounts")
+        .select("id")
+        .eq("user_id", user.data.user.id)
+        .limit(1);
 
-    if (!accounts?.length) return;
+      if (!accounts?.length) return;
 
-    // Tetikle: optimizeNow.js çalışsın
-    await fetch('/api/optimizeNow', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accountId: accounts[0].id }),
-    });
-  };
+      // Tetikle: optimizeNow.js çalışsın
+      await fetch("/api/optimizeNow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: accounts[0].id }),
+      });
+    };
 
-  syncNow();
-}, []);
-
+    syncNow();
+  }, []);
 
   useEffect(() => {
-  const subscription = supabase
-    .channel('public:amazon_keywords')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'amazon_keywords' },
-      payload => {
-        console.log('Keyword updated:', payload);
-        fetchKeywords(); // güncel veriyi yeniden çek
-      }
-    )
-    .subscribe();
+    const subscription = supabase
+      .channel("public:amazon_keywords")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "amazon_keywords" },
+        (payload) => {
+          console.log("Keyword updated:", payload);
+          fetchKeywords();
+        }
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(subscription);
-  };
-}, []);
-
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+  useEffect(() => {
+    if (selectedAccountId) {
+      fetch("/api/optimizeNow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: selectedAccountId }),
+      });
+    }
+  }, [selectedAccountId]);
 
   const fetchUserAndAccounts = useCallback(async () => {
     setLoadingAccounts(true);
