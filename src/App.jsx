@@ -8,10 +8,10 @@ import DashboardPage from '@/pages/DashboardPage';
 import CampaignsPage from '@/pages/CampaignsPage';
 import AdGroupsPage from '@/pages/AdGroupsPage'; 
 import KeywordsPage from '@/pages/KeywordsPage';
-import SettingsPage from '@/pages/SettingsPage';
 import LinkAmazonPage from '@/pages/LinkAmazonPage';
 import AmazonCallbackPage from '@/pages/AmazonCallbackPage'; 
-import { LayoutDashboard, BarChart3, Users as AdGroupsIcon, Tag, Settings as SettingsIcon, Link2 as LinkIcon, Zap } from 'lucide-react';
+import OptimizationPage from '@/pages/OptimizationPage';
+import { LayoutDashboard, BarChart3, Users as AdGroupsIcon, Tag, Settings as SettingsIcon, Link2 as LinkIcon, Zap, Zap as OptimizationIcon } from 'lucide-react';
 
 const ProtectedRoute = ({ user }) => {
   if (!user) {
@@ -49,8 +49,8 @@ function App() {
     { href: '/campaigns', icon: <BarChart3 />, label: 'Campaigns' },
     { href: '/ad-groups', icon: <AdGroupsIcon />, label: 'Ad Groups' }, 
     { href: '/keywords', icon: <Tag />, label: 'Keywords' },
+    { href: '/optimization', icon: <OptimizationIcon />, label: 'Optimization' },
     { href: '/link-amazon', icon: <LinkIcon />, label: 'KDP Accounts' },
-    { href: '/settings', icon: <SettingsIcon />, label: 'Settings' },
   ] : [];
 
   if (loading) {
@@ -78,7 +78,7 @@ function App() {
                 <Route path="/campaigns" element={<CampaignsPage />} />
                 <Route path="/ad-groups" element={<AdGroupsPage />} /> 
                 <Route path="/keywords" element={<KeywordsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/optimization" element={<OptimizationPage />} />
                 <Route path="/link-amazon" element={<LinkAmazonPage />} />
               </Route>
               <Route path="*" element={<Navigate to={user ? "/" : "/auth"} />} />

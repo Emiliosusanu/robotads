@@ -138,3 +138,15 @@ CREATE TABLE public.user_stats (
   CONSTRAINT user_stats_pkey PRIMARY KEY (id),
   CONSTRAINT user_stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
+
+CREATE TABLE public.optimization_job_logs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  job_type text NOT NULL,
+  status text NOT NULL,
+  message text,
+  started_at timestamp with time zone NOT NULL,
+  completed_at timestamp with time zone,
+  error_details jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT optimization_job_logs_pkey PRIMARY KEY (id)
+);
